@@ -6,8 +6,8 @@ from offerBuy.config.config import ACCT_TOKEN
 
 import logging
 
-from offerBuyAcct.bo.Message import Message, MsgType
-from offerBuyAcct.bo.replyText import replyText, WELCOME
+from offerBuyAcct.bo.message import Message, MsgType
+from offerBuyAcct.bo.reply_text import ReplyText, WELCOME
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def wei_xin(request):
             pass
 
         if message.msg_type == MsgType.EVENT and message.event == 'subscribe':
-            reply_text = replyText(message.user_id, message.self_user_id, WELCOME)
+            reply_text = ReplyText(message.user_id, message.self_user_id, WELCOME)
             return render(request, 'reply_text.xml', reply_text.get_dict())
 
         return render(request, 'reply_text.xml', 'an unsupported command')

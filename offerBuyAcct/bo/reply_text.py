@@ -1,9 +1,10 @@
 # -*- coding:utf-8 -*-
 import time
 
-WELCOME=''
+WELCOME = ''
 
-class replyText:
+
+class ReplyText:
     def __init__(self, userid, myid, content, timestamp=int(time.time())):
         self.userid = userid
         self.myid = myid
