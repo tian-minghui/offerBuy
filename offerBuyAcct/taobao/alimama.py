@@ -1,13 +1,18 @@
 import requests
 from offerBuyAcct.taobao.httputils import check,retry
 import time
+import json
 
-IP="221.223.81.156"
+IP="123.122.140.198"
 
 class Alimama:
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                      '(KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
+                      '(KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding':'gzip, deflate',
+        'Accept-Language':'zh-CN,zh;q=0.9,en-GB;q=0.8,en;q=0.7,zh-TW;q=0.6',
+        'Connection':'keep-alive'
     }
 
     def __init__(self):
@@ -17,10 +22,6 @@ class Alimama:
     def alimama_init(self):
         url = 'http://pub.alimama.com/'
         head = dict()
-        head["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
-        head["Accept-Encoding"] = "gzip, deflate"
-        head["Accept-Language"] = "zh-CN,zh;q=0.9,en-GB;q=0.8,en;q=0.7,zh-TW;q=0.6"
-        head["Connection"] = "keep-alive"
         head["Host"] = "pub.alimama.com"
         head["Upgrade-Insecure-Requests"] = "1"
         resp = self.session.get(url, headers=head)
@@ -95,30 +96,43 @@ class Alimama:
         print(resp.cookies)
 
     def get_item_info(self,item_url):
-        url='https://pub.alimama.com/items/search.json'
+        url='http://pub.alimama.com/items/search.json'
         timestamp=int(round(time.time() * 1000))
-        print(self.session.cookies.get("_tb_token_"))
+        pvid="10_123.122.140.198_2799_"+str(timestamp-20000)
         params={
             "q":item_url,
+            "_t": timestamp-1,
             "auctionTag":"",
-            "perPageSize":"",
+            "perPageSize":"50",
             "shopTag":"",
-            "_tb_token_":self.session.cookies.get("_tb_token_"),
-            "t":timestamp,
-            "_t":timestamp-1,
-            "pvid": "10_"+IP+"_3963_"+str(timestamp-20000)
+            "t": timestamp,
+            "_tb_token_":self.session.cookies.get("_tb_token_",domain=".alimama.com"),
+            "pvid": pvid
         }
-
-        resp=self.session.get(url,params=params)
+        req=requests.Request('GET',url,params=params)
+        r = req.prepare()
+        head = {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Host': 'pub.alimama.com',
+            'Referer':r.url
+        }
+        resp=self.session.get(url,headers=head,params=params,allow_redirects=False)
         print(resp.status_code)
-        print(params)
-        # print(resp.text)
         print(resp.url)
+        item_list=None
+        if check(resp,url):
+            item_list=resp.json()['data']['pageList']
+            if item_list.length==0:
+                item_list=None
+        return item_list,pvid
+
+    def get_item_url(self,item_list,pvid):
+        pass
 
 
 if __name__ == '__main__':
     ali = Alimama()
-    # ali.alimama_init()
+    ali.alimama_init()
     ali.login()
     ali.get_item_info("https://item.taobao.com/item.htm?spm=a1z10.4-c-s.w11739546-18467978978.5.45fc7b8dyuxfoU&id=560234787224&scene=taobao_shop")
 
