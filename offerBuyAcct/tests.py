@@ -1,11 +1,9 @@
 from django.test import TestCase
 
 # Create your tests here.
+m=dict()
+m['23']='d'
 
-import socket
-#获取本机电脑名
-myname = socket.getfqdn(socket.gethostname())
-print(myname)
-#获取本机ip
-myaddr = socket.gethostbyname(myname)
-print(myaddr)
+print(m['2'])
+
+

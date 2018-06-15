@@ -1,37 +1,33 @@
 import requests
-from offerBuyAcct.taobao.httputils import check,retry
-import time
-import json
 
-IP="123.122.140.198"
+from offerBuy.config.config import HEADERS, IP
+from utils.httputils import check_resp
+from utils.common import retry
+import logging
+logger = logging.getLogger(__name__)
 
-class Alimama:
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                      '(KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Encoding':'gzip, deflate',
-        'Accept-Language':'zh-CN,zh;q=0.9,en-GB;q=0.8,en;q=0.7,zh-TW;q=0.6',
-        'Connection':'keep-alive'
-    }
 
+class LoginSession(requests.Session):
     def __init__(self):
-        self.session = requests.session()
-        self.session.headers.update(self.headers)
+        super().__init__()
+        self.headers.update(HEADERS)
+        LoginSession.alimama_init()
+        LoginSession.login()
 
+    @retry
     def alimama_init(self):
         url = 'http://pub.alimama.com/'
         head = dict()
         head["Host"] = "pub.alimama.com"
         head["Upgrade-Insecure-Requests"] = "1"
-        resp = self.session.get(url, headers=head)
-        print(resp.url)
-        return check(resp,url)
+        resp = self.get(url, headers=head)
+        return check_resp(resp, url)
 
+    @retry
     def login(self):
-        url='https://login.taobao.com/member/login.jhtml?redirectURL=http%3A%2F%2Flogin.taobao.com%2Fmember%2Ftaobaoke%2Flogin.htm%3Fis_login%3D1'
-        print(self.session.cookies)
-        data={
+        url = 'https://login.taobao.com/member/login.jhtml?redirectURL=http%3A%2F%2Flogin.taobao.com%2Fmember%2Ftaobaoke%2Flogin.htm%3Fis_login%3D1'
+        print(self.cookies)
+        data = {
             "TPL_username": "tb677116_88",
             "TPL_password": "",
             "ncoSig": "",
@@ -90,49 +86,19 @@ class Alimama:
             "um_token": "HV01PAAZ0b828fbfdddf519c5b211a8300b44d6c",
             "ua": "109#k8/a7BOIapq3gjNhSBzpCzS6T4vERMZcCqXhh/WkNXkn/vJupc25hiD6pC51wtbcTvTDrghdwjWc2vLCrBGaajH4/1cC1ad+qU5RI5/gHwQp1vQ7yApEY0sxy7LnbEGaNR/wccYSacyeAngHuU2DJgrvENo96lza/No8PWimNLzcNuioaQkgedExkphWgvN1zUpR9WCuwbWNzt7eTakW1MYB0CQE27NEmg2IX6NDysbZCzs6iKO+uW4Fc5UsUdbyo14VDjEw9niSQ1+DLUYhh2dB25DtU9GKwyRVdj3UVMqMGkAcrLaxo5bzkW/ehkpRFdLzENU0cPoun1ZNLwkP1brReqUTRMyNfeDWzNS/1Qy3kpAKo7xKIA8A0X39fBwG75QTzth98Zzbh0bETBTapl9Ur6A1D7M4fsSQeTumTcWnDSGYgUMIGWnCli9SgUchn1E+5U8KRamofsCmz2aIGWYElszVt9UxrObLAUQpGuMMDVh77EgUz2QiMDrimu9/tZzLKa1H5erxi2cEtclor3hxld+qe6VI7D+tx1Rd/JoBAwT5LEpsq9YrnkUDY1ddGUNlCl8i67XsUrgydVpQ59jQgKMdKi3+gOVDpF5a+CEFz999227fKG5hR25v9iPCtCxfCJU/htyv5L3CdTvYD2CCa1CqYIEPQsRZj7jpVKiGGwdKd29wgsWoCuEdzk/1So/DCAuf6KYbysj6RSiP4fA9WxElmXQJOpRcTHV8+xjKC/QufgTFeU/6EIx/xW3YsrxThK3BE48Ptkmo/ENtcWf0DYsQ65pDBkoUDDp9p1EpbKjWf0242AvcR4O76FcQb8eVFQ/VEJcsxafsUS3xnO2u9ikAwkITW9+4sbX/YibQlIiwDGJrpRLZE7R853V/IYZ1zx9DRqBmNP3cuQjVVhXdq+SmhPLTwn4q8qGMgDZWhqEHZLwceL51tTi6N0b9AGHa5ISVvMFYgLOjw43tOQXeeCAala44/2h+lx+omV/h+uqovpjLzmHImlbHy9pwBoJe6oJn32ZhY/Eat72FJTnEhf5EgP4zuEoo9baD2erOmvl2uef8bK5Hmwo43X8xEnotJmmjgc6RuH7GNtUGAp35RsWVKH7UdxB5ikO6nnmZL6FlSSRFl2JyhR3dQuTBd0ERtCnRzzSDJXtYnRERY3LUcnIYSa=="
         }
-        resp=self.session.post(url,data=data)
-        print(resp.status_code)
-        print(resp.url)
-        print(resp.cookies)
+        resp = self.post(url, data=data)
+        return check_resp(resp, url)
 
-    def get_item_info(self,item_url):
-        url='http://pub.alimama.com/items/search.json'
-        timestamp=int(round(time.time() * 1000))
-        pvid="10_123.122.140.198_2799_"+str(timestamp-20000)
-        params={
-            "q":item_url,
-            "_t": timestamp-1,
-            "auctionTag":"",
-            "perPageSize":"50",
-            "shopTag":"",
-            "t": timestamp,
-            "_tb_token_":self.session.cookies.get("_tb_token_",domain=".alimama.com"),
-            "pvid": pvid
-        }
-        req=requests.Request('GET',url,params=params)
-        r = req.prepare()
-        head = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Host': 'pub.alimama.com',
-            'Referer':r.url
-        }
-        resp=self.session.get(url,headers=head,params=params,allow_redirects=False)
-        print(resp.status_code)
-        print(resp.url)
-        item_list=None
-        if check(resp,url):
-            item_list=resp.json()['data']['pageList']
-            if item_list.length==0:
-                item_list=None
-        return item_list,pvid
+    def refresh(self):
+        self.__init__()
 
-    def get_item_url(self,item_list,pvid):
-        pass
 
+login_session = LoginSession()
 
 if __name__ == '__main__':
-    ali = Alimama()
-    ali.alimama_init()
-    ali.login()
-    ali.get_item_info("https://item.taobao.com/item.htm?spm=a1z10.4-c-s.w11739546-18467978978.5.45fc7b8dyuxfoU&id=560234787224&scene=taobao_shop")
-
+    pass
+    # ali = Client()
+    # ali.alimama_init()
+    # ali.login()
+    # ali.get_item_list(
+    #     "https://item.taobao.com/item.htm?spm=a1z10.4-c-s.w11739546-18467978978.5.45fc7b8dyuxfoU&id=560234787224&scene=taobao_shop")
