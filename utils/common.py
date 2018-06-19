@@ -1,10 +1,10 @@
 # -*- coding:utf-8 -*-
 import logging
-
+import time
 logger = logging.getLogger(__name__)
 
 
-def retry(times=3):
+def retry(times=2):
     def _retry(func):
         def __retry(*args, **kwargs):
             ret = None
@@ -17,3 +17,7 @@ def retry(times=3):
         return __retry
 
     return _retry
+
+
+def get_time(add=0):
+    return int(round(time.time() * 1000))+add
