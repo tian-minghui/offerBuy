@@ -14,4 +14,4 @@ class Item:
         self.shortLinkUrl = shortLinkUrl
 
     def __str__(self):
-        return 'auctionId:'+self.auctionId
+        return '商品名称：%s,商品价格:%s,预计返利：%s,返利淘口令：%s'%(self.title,self.zkPrice,self.tkCommFee,self.taoToken)

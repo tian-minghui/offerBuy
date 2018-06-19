@@ -3,16 +3,18 @@ import hashlib
 from django.http import HttpResponse
 from django.shortcuts import render
 from offerBuy.config.config import ACCT_TOKEN
-
+from offerBuyAcct.taobao.item import get_first_item
 import logging
-
+import re
 from offerBuyAcct.bo.message import Message, MsgType
 from offerBuyAcct.bo.reply_text import ReplyText, WELCOME
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+item_url_pattern='.+item.taobao.com.+'
 
 # Create your views here.
+
 
 # 处理微信服务器请求
 def wei_xin(request):
@@ -38,6 +40,10 @@ def wei_xin(request):
         if not message:
             return render(request, 'reply_text.xml', 'an unsupported command')
         if message.msg_type == MsgType.TEXT:
+            group=re.findall(item_url_pattern,message.content)
+            if len(group)==1:
+                item=get_first_item(group[0])
+                return render(request,'reply_text.xml',str(item))
             pass
 
         if message.msg_type == MsgType.EVENT and message.event == 'subscribe':

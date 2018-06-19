@@ -1,10 +1,11 @@
 import requests
 
-from offerBuy.config.config import HEADERS, IP
+from offerBuy.config.config import HEADERS, IP,COOKIES
 from utils.httputils import check_resp
 from utils.common import retry, get_time
 import logging
 import re
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -18,23 +19,24 @@ def get_st_url(text):
         return l1[0],l2[0]
     return None,None
 
+
 class LoginSession(requests.Session):
     def __init__(self):
         super().__init__()
         self.headers.update(HEADERS)
-        # self.alimama_init()
-        # self.login()
-        self.get_pub_context()
+        if COOKIES:
+            self.cookies.update(COOKIES)
+        else:
+            pass
+        self.keep_cookies_thread()
 
-    def alimama_init(self):
+    def visit_main_page(self):
         url = 'http://pub.alimama.com/'
-        head = dict()
-        head["Host"] = "pub.alimama.com"
-        head["Upgrade-Insecure-Requests"] = "1"
-        resp = self.get(url, headers=head)
+        resp = self.get(url)
         return check_resp(resp, url)
 
-    def login(self):
+    # 账号密码登录  https://www.alimama.com/aso/tvs中有个token 未发现怎么生成
+    def acct_login(self):
         url = 'https://login.taobao.com/member/login.jhtml?redirectURL=http%3A%2F%2Flogin.taobao.com%2Fmember%2Ftaobaoke%2Flogin.htm%3Fis_login%3D1'
         data = {
             "TPL_username": "tb677116_88",
@@ -106,76 +108,47 @@ class LoginSession(requests.Session):
             logger.error(alibaba_url,alipay_url)
             return
         print(self.cookies)
-
-        url1='https://www.alimama.com/membersvc/my.htm'
-        params={
-            'domain': 'taobao',
-            'service': 'user_on_taobao',
-            'sign_account': 'e86d40ed77c8d07efd4a02fbf5362b48'
-        }
-        resp=self.get(url1,params=params,allow_redirects=False)
-        if not check_resp(resp,url1,status_code=302):
-            print(resp.url)
-
-
-        #
-        # url2='https://login.taobao.com/aso/tgs'
-        # params={
-        #     'domain': 'alimama',
-        #     'sign_account': 'e86d40ed77c8d07efd4a02fbf5362b48',
-        #     'service': 'user_on_taobao',
-        #     'target': '68747470733A2F2F7075622E616C696D616D612E636F6D2F696E6465782E68746D'
-        # }
-        # resp = self.get(url2, params=params, allow_redirects=False)
-        # if not check_resp(resp, url2, status_code=302):
-        #     print(resp.url)
-        # url3='https://www.alimama.com/aso/tvs'
-        # params={
-        #     'domain': 'taobao',
-        #     'sign_account': 'e86d40ed77c8d07efd4a02fbf5362b48',
-        #     'target': '68747470733A2F2F7075622E616C696D616D612E636F6D2F696E6465782E68746D',
-        #     'token': '3531666662353435376563613438663632396366346466343562396532356531',
-        #     'sign_time': int(get_time()/1000),
-        #     'defaultLoginURL': 'https://login.taobao.com/member/login.jhtml'
-        # }
-        # resp = self.get(url3, params=params, allow_redirects=False)
-        # if not check_resp(resp, url3, status_code=302):
-        #     print(resp.url)
         return check_resp(resp, url)
 
-    def login_cookie(self):
-        pass
+    def cookies_login(self,cookies):
+        self.cookies.update(cookies)
+        return self.check_login()
 
     def refresh(self):
         self.__init__()
 
-    def get_pub_context(self):
-        self.cookies.update({
-            'alimamapwag': 'TW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzY2LjAuMzM1OS4xNzAgU2FmYXJpLzUzNy4zNg%3D%3D',
-            'alimamapw': 'RVFXAQ5VVFA5Wl5qVFZRVwRVBgRRVAxTXFQFBFYAV1QGUFAFBgIHAggAAAQ%3D',
-            'cna':'opiuEzNcEBICAd3fUfFnXB1L',
-            't':'e0df263316062eb544a929f2ac394a07',
-            'cookie2':'1cc7cd7aa3ea8d2b4c101c78e90c496f',
-            'v':'0',
-            'cookie32':'2c3be12e34a4db45d57a2d522915cff0',
-            'cookie31':'MTMyMzAyMDU1LHRiNjc3MTE2Xzg4LHRpYW5taDIwMTNAMTYzLmNvbSxUQg%3D%3D',
-            'login':'UtASsssmOIJ0bQ%3D%3D',
-            'isg':'BBUVSj_T4nOoacaPrYBUDgv9JBEPushIkBaRY5e7vAzb7jbgXmah9J9nvPLYbuHc',
-            '_tb_token_':'5663b4137373a'
-
-        })
+    def check_login(self):
         url = 'https://pub.alimama.com/common/getUnionPubContextInfo.json'
         resp = self.get(url)
         data = resp.json()['data']
         if 'memberid' not in data.keys():
-            logger.error('当前未登录')
             logger.error(resp.json())
             return False
-        print(data)
+        logger.info(data)
         return True
+
+    # 定时任务
+    def keep_cookies_thread(self):
+        from threading import Thread
+
+        def main_page_check():
+            while True:
+                time.sleep(60 * 10)
+                if self.visit_main_page():
+                    logger.debug('访问主页完成')
+                    if self.check_login():
+                        logger.info('当前已登录')
+                    else:
+                        logger.error('当前未登录')
+                else:
+                    logger.error('访问主页失败')
+
+        t = Thread(target=main_page_check, args=())
+        t.setDaemon(True)
+        t.start()
 
 
 login_session = LoginSession()
 
 if __name__ == '__main__':
-    login_session.get_pub_context()
+    pass
