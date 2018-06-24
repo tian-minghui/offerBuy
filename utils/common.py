@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import logging
 import time
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('django')
 
 
 def retry(times=2):

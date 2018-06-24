@@ -3,13 +3,13 @@ import hashlib
 from django.http import HttpResponse
 from django.shortcuts import render
 from offerBuy.config.config import ACCT_TOKEN
-from offerBuyAcct.taobao.item import get_first_item
+from api.taobao.item import get_first_item
 import logging
 import re
 from offerBuyAcct.bo.message import Message, MsgType
 from offerBuyAcct.bo.reply_text import ReplyText, WELCOME
 # Get an instance of a logger
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('django')
 
 item_url_pattern='.+item.taobao.com.+'
 
@@ -51,3 +51,10 @@ def wei_xin(request):
             return render(request, 'reply_text.xml', reply_text.get_dict())
 
         return render(request, 'reply_text.xml', 'an unsupported command')
+
+
+def test(request):
+    url=request.GET.get("url")
+    print(url)
+    item = get_first_item(url)
+    return HttpResponse(str(item))

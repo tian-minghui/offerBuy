@@ -7,7 +7,7 @@ import logging
 import re
 import time
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('django')
 
 
 def get_st_url(text):
@@ -25,7 +25,7 @@ class LoginSession(requests.Session):
         super().__init__()
         self.headers.update(HEADERS)
         if COOKIES:
-            self.cookies.update(COOKIES)
+            self.cookies_login(COOKIES)
         else:
             pass
         self.keep_cookies_thread()
@@ -120,6 +120,7 @@ class LoginSession(requests.Session):
     def check_login(self):
         url = 'https://pub.alimama.com/common/getUnionPubContextInfo.json'
         resp = self.get(url)
+        logger.error(resp.json())
         data = resp.json()['data']
         if 'memberid' not in data.keys():
             logger.error(resp.json())
@@ -133,6 +134,7 @@ class LoginSession(requests.Session):
 
         def main_page_check():
             while True:
+                logger.error('exec thread-----------'+time.asctime())
                 time.sleep(60 * 10)
                 if self.visit_main_page():
                     logger.debug('访问主页完成')

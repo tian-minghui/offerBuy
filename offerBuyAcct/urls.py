@@ -6,4 +6,5 @@ from . import views
 
 urlpatterns = [
     path('', views.wei_xin),
+    path('test/',views.test)
 ]

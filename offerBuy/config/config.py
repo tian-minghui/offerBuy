@@ -19,14 +19,14 @@ ADZONE_ID = "779032544"     # 推广位id
 COOKIES={
         'alimamapwag': 'TW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzY2LjAuMzM1OS4xNzAgU2FmYXJpLzUzNy4zNg%3D%3D',
         'alimamapw': 'RVFXAQ5VVFA5Wl5qVFZRVwRVBgRRVAxTXFQFBFYAV1QGUFAFBgIHAggAAAQ%3D',
-        'cna': 'opiuEzNcEBICAd3fUfFnXB1L',
-        't': 'e0df263316062eb544a929f2ac394a07',
-        'cookie2': '1cc7cd7aa3ea8d2b4c101c78e90c496f',
+        'cna': '6uS1E6BNJQUCAd3fV1mbiWu9',
+        't': '72acaa673a047e44dc35a9d6b04eb4fe',
+        'cookie2': '11d04d4b749c4e1139dda085a12d7b68',
         'v': '0',
         'cookie32': '2c3be12e34a4db45d57a2d522915cff0',
         'cookie31': 'MTMyMzAyMDU1LHRiNjc3MTE2Xzg4LHRpYW5taDIwMTNAMTYzLmNvbSxUQg%3D%3D',
-        'login': 'UtASsssmOIJ0bQ%3D%3D',
-        'isg': 'BBUVSj_T4nOoacaPrYBUDgv9JBEPushIkBaRY5e7vAzb7jbgXmah9J9nvPLYbuHc',
-        '_tb_token_': '5663b4137373a'
+        'login': 'U%2BGCWk%2F75gdr5Q%3D%3D',
+        'isg': 'BAsLQttw1P2ZCAiomgaWgC7nmq81CB5OmmTfzX0PFcqinDn-B3AMcvH9ctzXvHca',
+        '_tb_token_': 'f8731568e34de'
 
     }

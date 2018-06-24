@@ -1,28 +1,38 @@
 import time
-from offerBuy.config.config import HEADERS, IP
-from offerBuyAcct.taobao.session import login_session
+from api.taobao.session import login_session
 from utils.httputils import check_resp
 from utils.common import get_time
 import logging
 import requests
+import random
+from offerBuyAcct.bo.item import Item
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('django')
 
 
-def get_item_list(item_url):
-    url = 'http://pub.alimama.com/items/search.json'
+def get_pvid():
+    from offerBuy.config.config import IP
     timestamp = int(round(time.time() * 1000))
-    pvid = "10_123.122.140.198_2799_" + str(timestamp - 20000)
+    return '10_' + IP + '_2799_' + str(timestamp - random.randint(2000, 20000))
+
+
+# all =True  不勾选营销的定向计划
+def search_items(search_condition, all=True):
+    items = []
+    url = 'http://pub.alimama.com/items/search.json'
     params = {
-        "q": item_url,
-        "_t": timestamp - 1,
+        "q": search_condition,
+        "_t": get_time(-1),
         "auctionTag": "",
         "perPageSize": "50",
-        "shopTag": "",
-        "t": timestamp,
+        "shopTag": "yxjh",
+        "t": get_time(),
         "_tb_token_": login_session.cookies.get("_tb_token_", domain=".alimama.com"),
-        "pvid": pvid
+        "pvid": get_pvid()
     }
+    if all:
+        params['toPage'] = '1'
+        params['shopTag'] = ''
     req = requests.Request('GET', url, params=params)
     r = req.prepare()
     head = {
@@ -34,17 +44,21 @@ def get_item_list(item_url):
     try:
         if check_resp(resp, url):
             item_list = resp.json()['data']['pageList']
-            if len(item_list) == 0:
-                return
-            return item_list, pvid
-        else:
-            return
+            if not item_list or len(item_list) == 0:
+                logger.warn('返回结果为None')
+                logger.warn(resp.json())
+                return items
+            for item in item_list:
+                items.append(Item(item['auctionId'], item['title'], item['pictUrl'], item['tkCommonRate'],
+                                  item['zkPrice'], item['tkCommFee']))
+        return items
     except KeyError as error:
         logging.error(url, error)
-        return
+        return items
 
 
-def get_item_link(auctionId, adzoneid, siteid, pvid):
+def get_item_link(item, adzoneid, siteid):
+    auctionId = item.auctionId
     logger.info('the auctionId is %s' % auctionId)
     url = 'http://pub.alimama.com/common/code/getAuctionCode.json'
     params = {
@@ -54,32 +68,31 @@ def get_item_link(auctionId, adzoneid, siteid, pvid):
         'scenes': '1',
         't': get_time(),
         '_tb_token_': login_session.cookies.get("_tb_token_", domain=".alimama.com"),
-        'pvid': pvid
+        'pvid': get_pvid()
     }
     resp = login_session.get(url, params=params, allow_redirects=False)
     if not check_resp(resp, url):
         logger.error(resp.content)
         logger.error(resp.json())
-    return resp.json()
+    js = resp.json()['data']
+    item.set_link(js['clickUrl'], js['taoToken'], js['shortLinkUrl'])
+    return item
+
+
+def get_item_object(search_condition):
+    pass
 
 
 def get_first_item(item_url):
     from offerBuy.config.config import ADZONE_ID, SITE_ID
-    from offerBuyAcct.bo.item import Item
-    first_dict, pvid = get_item_list(item_url)[0]
-    auctionid = first_dict['auctionid']
-    item = Item(auctionid, first_dict['title'], first_dict['pictUrl'], first_dict['tkCommonRate'],
-                first_dict['zkPrice'], first_dict['tkCommFee'])
-    link_dict = get_item_link(auctionid, ADZONE_ID, SITE_ID, pvid)['data']
-    item.set_link(link_dict['clickUrl'], link_dict['taoToken'], link_dict['shortLinkUrl'])
+    item = None
+    items = search_items(item_url)
+    if items and len(items) != 0:
+        item = get_item_link(items[0], ADZONE_ID, SITE_ID)
     return item
 
 
 if __name__ == '__main__':
     from offerBuy.config.config import ADZONE_ID, SITE_ID
 
-    item_list, pvid = get_item_list(
-        'https://item.taobao.com/item.htm?spm=a1z10.4-c-s.w11739546-18467978978.5.45fc7b8dyuxfoU&id=560234787224&scene=taobao_shop')
-    print(item_list)
-    auctionid = item_list[0]['auctionId']
-    get_item_link(auctionid, ADZONE_ID, SITE_ID, pvid)
+    pass
