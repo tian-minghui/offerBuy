@@ -14,6 +14,7 @@ def send_request(params):
         params["client_id"] = client_id
         params["timestamp"] = get_time()
         sorted_params = sorted(params.items(), key=lambda item: item[0])
+        print(sorted_params)
         tmp = client_secret
         for key, value in sorted_params:
             tmp += str(key) + str(value)

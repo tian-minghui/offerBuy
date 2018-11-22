@@ -1,3 +1,7 @@
+"""
+http://open.pinduoduo.com/#/apidocument/port?id=30
+"""
+
 item_key_list = ["create_at", "goods_id", "goods_name", "goods_desc", "goods_thumbnail_url", "goods_image_url",
                  "goods_gallery_urls", "sold_quantity", "min_group_price", "min_normal_price", "mall_name",
                  "merchant_type",
@@ -63,7 +67,7 @@ class PromotionInfo:
         self.short_url = promotion_dict.get("short_url", None)
         self.url = promotion_dict.get("url", None)
 
-        if "we_app_info" in promotion_dict.keys():
+        if "we_app_info" in promotion_dict.keys() and promotion_dict.get("we_app_info"):
             self.we_app_icon_url = promotion_dict.get("we_app_info").get("we_app_icon_url", None)
             self.banner_url = promotion_dict.get("we_app_info").get("banner_url", None)
             self.desc = promotion_dict.get("we_app_info").get("desc", None)
@@ -72,3 +76,34 @@ class PromotionInfo:
             self.user_name = promotion_dict.get("we_app_info").get("user_name", None)
             self.title = promotion_dict.get("we_app_info").get("title", None)
             self.app_id = promotion_dict.get("we_app_info").get("app_id", None)
+
+
+class Order:
+    def __init__(self, order_dict):
+        self.order_sn = order_dict.get("order_sn", None)
+        self.goods_id = order_dict.get("goods_id", None)
+        self.goods_name = order_dict.get("goods_name", None)
+        self.goods_thumbnail_url = order_dict.get("goods_thumbnail_url", None)
+        self.goods_quantity = order_dict.get("goods_quantity", None)
+        self.goods_price = order_dict.get("goods_price", None)
+        self.order_amount = order_dict.get("order_amount", None)
+        self.order_create_time = order_dict.get("order_create_time", None)
+        self.order_verify_time = order_dict.get("order_verify_time", None)
+        self.order_pay_time = order_dict.get("order_pay_time", None)
+        self.promotion_rate = order_dict.get("promotion_rate", None)
+        self.promotion_amount = order_dict.get("promotion_amount", None)
+        """
+        订单状态： -1 未支付; 0-已支付；1-已成团；2-确认收货；3-审核成功；4-审核失败（不可提现）；5-已经结算；8-非多多进宝商品（无佣金订单）
+        """
+        self.order_status = order_dict.get("order_status", None)
+        self.order_status_desc = order_dict.get("order_status_desc", None)
+        self.order_group_success_time = order_dict.get("order_group_success_time", None)
+        self.order_modify_at = order_dict.get("order_modify_at", None)
+        self.p_id = order_dict.get("p_id", None)
+
+
+if __name__ == '__main__':
+    d = {
+        "sdgsg": "sgsg"
+    }
+    print(d["s"])

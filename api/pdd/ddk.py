@@ -1,6 +1,6 @@
 from api.pdd.pdd_utils import send_request
 import logging
-from api.pdd.ddkVo import GoodsVo, Pid, PromotionInfo
+from api.pdd.ddkVo import GoodsVo, Pid, PromotionInfo, Order
 
 logger = logging.getLogger('django')
 
@@ -8,6 +8,7 @@ goods_search_type = "pdd.ddk.goods.search"
 pid_query_type = "pdd.ddk.goods.pid.query"
 pid_generate_type = "pdd.ddk.goods.pid.generate"
 promotion_url_generate_type = "pdd.ddk.goods.promotion.url.generate"
+order_list_type = "pdd.ddk.order.list.increment.get"
 
 
 def response_check(response):
@@ -58,7 +59,7 @@ def pid_search():
       }]
     """
     params = {
-        "type": goods_search_type,
+        "type": pid_query_type,
     }
     response = send_request(params)
     if response_check(response):
@@ -75,7 +76,7 @@ def pid_generate(p_id_name):
     params = {
         "type": pid_generate_type,
         "number": 1,
-        "p_id_name_list": [p_id_name]
+        "p_id_name_list":[p_id_name].__str__()
     }
     response = send_request(params)
     if response_check(response):
@@ -102,8 +103,8 @@ def promotion_url_generate(p_id, goods_id,
     params = {
         "type": promotion_url_generate_type,
         "p_id": p_id,
-        "multi_group" : is_multi_group,
-        "goods_id_list": [goods_id],
+        "multi_group": is_multi_group,
+        "goods_id_list": [goods_id].__str__(),
         "generate_short_url": is_generate_short_url,
         "generate_weapp_webview": is_generate_weapp_webview,
         "generate_we_app": is_generate_we_app
@@ -114,9 +115,43 @@ def promotion_url_generate(p_id, goods_id,
     if response_check(response):
         d = response.json()["goods_promotion_url_generate_response"]["goods_promotion_url_list"][0]
         return PromotionInfo(d)
+    return None
+
+
+def order_list(start_update_time, end_update_time, page_size, page):
+    """
+    获取订单推广信息
+    :param start_update_time:
+    :param end_update_time:
+    :param page_size:
+    :param page:
+    :return: List<Order>
+    """
+    params = {
+        "type": order_list_type,
+        "start_update_time": start_update_time,
+        "end_update_time": end_update_time,
+        "page_size": page_size,
+        "page": page
+    }
+    response = send_request(params)
+    if response_check(response):
+        return_order_list=[]
+        for order in response.json()["order_list_get_response"]["order_list"]:
+            return_order_list.append(Order(order))
+        return return_order_list
+    return None
 
 
 if __name__ == '__main__':
-    word = "珊瑚绒浴帽女加厚干发帽超强吸水圆形浴帽干发巾速干舒适"
-    goods = item_search(word)
-    print(goods[0].category_name)
+    # word = "珊瑚绒浴帽女加厚干发帽超强吸水圆形浴帽干发巾速干舒适"
+    # goods = item_search(word)
+    # print(goods[0].goods_id)
+
+    goods_id=75229023
+
+    p_id="1775958_42184231"
+    # print(pid_search())
+
+    # print(pid_generate("test").p_id)
+    print(promotion_url_generate(p_id,goods_id).url)
